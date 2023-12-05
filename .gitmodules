@@ -1,0 +1,3 @@
+[submodule "qupath"]
+	path = qupath
+	url = git@github.com:qupath/qupath.git
