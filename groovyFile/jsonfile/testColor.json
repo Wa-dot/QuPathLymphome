@@ -1,0 +1,51 @@
+[
+  {
+    "type": "Feature",
+    "id": "53fd91f9-84c2-499f-a55d-e646cdf01f2b",
+    "geometry": {
+      "coordinates": {
+        "x" : 1200.0,
+        "y" : 120.0,
+        "width" : 1000.0,
+        "height" : 1000.0
+      }
+    },
+    "properties": {
+      "objectType": "annotation"
+    },
+    "probability": 0.2
+  },
+  {
+    "type": "Feature",
+    "id": "53fd91f9-84c2-499f-a65d-e6d6cdf01f2b",
+    "geometry": {
+      "coordinates": {
+        "x" : 2200.0,
+        "y" : 1120.0,
+        "width" : 1000.0,
+        "height" : 1000.0
+      }
+    },
+    "properties": {
+      "objectType": "annotation"
+    },
+    "probability": 0.8
+  },
+  {
+    "type": "Feature",
+    "id": "53fd91f9-84c2-479f-a55d-e6d6cdf01f2b",
+    "geometry": {
+      "coordinates": {
+        "x" : 3200.0,
+        "y" : 2120.0,
+        "width" : 1000.0,
+        "height" : 1000.0
+      }
+    },
+    "properties": {
+      "objectType": "annotation"
+    },
+    "probability": 0.3
+  }
+]
+
