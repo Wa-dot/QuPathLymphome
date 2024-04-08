@@ -39,7 +39,7 @@ class Feature {
 }
 
 // Get the location of the JSON file
-def jsonfile = "C:\\Users\\Computer\\Desktop\\Projet\\groovyFile\\jsonfile\\testColor.json"
+def jsonfile = "C:\\Users\\Computer\\Desktop\\Projet\\QuPathLymphome\\groovyFile\\jsonfile\\testColor.json"
 
 // Read the JSON file
 String json = new String(Files.readAllBytes(Paths.get(jsonfile)))
