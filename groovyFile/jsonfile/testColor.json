@@ -46,6 +46,22 @@
       "objectType": "annotation"
     },
     "probability": 0.3
+  },
+  {
+    "type": "Feature",
+    "id": "53fd91f9-84c2-479f-a55d-e6d6cdf01f2b",
+    "geometry": {
+      "coordinates": {
+        "x" : 4200.0,
+        "y" : 3120.0,
+        "width" : 1000.0,
+        "height" : 1000.0
+      }
+    },
+    "properties": {
+      "objectType": "annotation"
+    },
+    "probability": 0.8
   }
 ]
 
