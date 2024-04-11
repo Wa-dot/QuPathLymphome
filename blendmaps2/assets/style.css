@@ -1,0 +1,57 @@
+/* Sélecteur pour le conteneur principal de l'application */
+#app-container {
+    background-color: rgb(240, 240, 240); /* Couleur de fond */
+    min-height: 100vh;
+    margin-top: 0;
+    padding: 30px;
+    box-sizing: border-box;
+   /* Espacement intérieur */
+}
+#selection-part{
+    width: 70%;
+    margin: auto;
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+}
+#main-container{
+    width: 80%;
+    margin: auto;
+}
+/* Sélecteur pour le titre */
+h1 {
+    color: black; /* Couleur du texte */
+    font-size: 3rem; /* Taille de la police */
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+}
+h4{
+    color: black; /* Couleur du texte */
+    font-size: 1rem; /* Taille de la police */
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+#heatmap{
+
+}
+/* Sélecteur pour le bouton Exit */
+#exit-button {
+    background-color: red; /* Couleur de fond */
+    color: white; /* Couleur du texte */
+    border: none; /* Supprimer la bordure */
+    padding: 10px 20px; /* Espacement intérieur */
+    cursor: pointer; /* Curseur de souris */
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 40px;
+}
+
+/* Sélecteur pour le menu déroulant */
+.dropdown {
+    width: 200px; /* Largeur du menu déroulant */
+}
+
+/* Sélecteur pour le graphique */
+#heatmap {
+    border: 2px solid black; /* Bordure du graphique */
+}
