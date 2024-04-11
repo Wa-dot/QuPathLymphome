@@ -24,4 +24,5 @@ hs_err_pid*
 replay_pid*
 
 #Except conda environment
-./lymphome_containers
+lymphome_containers/
+WSI/
