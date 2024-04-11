@@ -8,16 +8,17 @@ from PIL import Image
 import json
 from dash.exceptions import PreventUpdate
 from generateDatas import create_proba_json
+import plotly.graph_objects as go
 
 external_stylesheets = ['assets/style.css']
 df = []
 web_open = False
 
-path_name_image = "C:/Users/Computer/Desktop/Projet/QuPathLymphome/blendmaps2/data/**/*.png"
+path_name_image = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*.png"
 # path_name_annotation = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*.json"
 # path_name_wsifolders = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/"
 # create_proba_json(path_name_wsifolders,path_name_annotation)
-path_name_data = "C:/Users/Computer/Desktop/Projet/QuPathLymphome/blendmaps2/data/**/*result.json"
+path_name_data = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*result.json"
 
 
 for file_ in glob.glob(path_name_image, recursive = True):
@@ -64,6 +65,7 @@ app.layout = html.Div(
     id="main-container",
     children=[
        dcc.Graph(id='images'),
+       dcc.Graph(id='heatmap'),
        html.Div([
           html.H4('Table des résultats'),
           html.Div([
@@ -100,7 +102,6 @@ def update_dropdown(input_value):
 def update_image(wsi, annotation):
     dff = df[df['wsi'] == wsi]
     dff = dff[dff['annotation'] == annotation]
-    print(dff)
     img_sequence = []
     names = []
     for i, row in dff.iterrows():
@@ -123,6 +124,47 @@ def update_image(wsi, annotation):
 
     return fig
 
+@callback(
+    Output('heatmap', 'figure'),
+    [Input('dropdown-wsi', 'value'), Input('dropdown-annotation', 'value')] 
+)
+def update_heatmap(wsi,annotation):
+    dff = df[df['wsi'] == wsi]
+    dff = dff[dff['annotation'] == annotation]
+    
+    table_data = []
+    #RESOLUTION de la table juste ici
+    dff.reset_index(drop=True, inplace=True)
+    
+    table_data = dff['data'][0]['tiles']
+    
+    x_values = [item['x'] for item in table_data]
+    y_values = [item['y'] for item in table_data]
+    probabilities = [item['lymphoma_probability'] for item in table_data]
+    width = np.max(x_values) + 1
+    height = np.max(y_values) + 1
+    proba_matrix = np.zeros((height, width))
+    for i in range(len(probabilities)):
+        proba_matrix[height - y_values[i] - 1, x_values[i]] = probabilities[i]  # Inversion de l'axe Y
+    heatmap_data = [{
+        'z': proba_matrix.tolist(),
+        'y': [str(height - y - 1) for y in range(height)],  # Inversion des étiquettes d'axe Y
+        'x': [str(x) for x in range(width)],   # Labels d'axe X en chaînes
+        'type': 'heatmap',
+        'colorscale': 'bluered',  # Couleurs pour la visualisation
+        'colorbar': {'title': 'Probability'},  # Ajoutez une barre de couleur avec un titre
+    }]
+    print(dff['path'])
+    img = Image.open(dff['path'].iloc[0]).reduce(4)
+    img_width, img_height = img.size
+    print(img_width,img_height)
+    fig = go.Figure(data=heatmap_data[0])
+    fig.update_layout(
+        width=img_width,  # Définir la largeur de la figure
+        height=img_height,  # Définir la hauteur de la figure
+        xaxis=dict(side='top')
+    )
+    return fig 
 #Table part
 @callback(
     Output('table-container', 'children'),
@@ -135,8 +177,8 @@ def update_table(wsi, annotation,filter_value):
     table_data = []
     #RESOLUTION de la table juste ici
     dff.reset_index(drop=True, inplace=True)
-   
     table_data = dff['data'][0]['tiles']
+    
     # Création du DataFrame pour afficher les données dans le tableau
     df_table = pandas.DataFrame(table_data)
     
@@ -170,5 +212,5 @@ def exit_button_click(n_clicks):
         return None
 
 if __name__ == '__main__':
-    web_open : webbrowser.open_new('http://127.0.0.1:8888/')
+    webbrowser.open_new('http://127.0.0.1:8888/')
     app.run(debug=True, port=8888, use_reloader=False)
