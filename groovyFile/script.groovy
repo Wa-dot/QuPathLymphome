@@ -11,7 +11,7 @@ import java.io.IOException
 import javax.swing.JFileChooser
 import qupath.lib.images.servers.openslide.OpenslideImageServer
 // Optional output path (can be removed)
-def pathOutput = chooseDirectory("Choose the data folder")
+def pathOutput = chooseDirectory("Choose the QupathLymphoma folder")
 
 var gson = GsonTools.getInstance(true)
 
@@ -24,7 +24,7 @@ imageName = GeneralTools.getNameWithoutExtension(imageData.getServer().getMetada
 imageName = imageName.substring(0, imageName.lastIndexOf('.'))
 print imageName
 // Construct the full path for the image folder
-def imageFolder = buildFilePath(pathOutput, imageName)
+def imageFolder = buildFilePath(pathOutput + "\\blendmaps2\\data", imageName)
 
 // Check if the image folder exists, create it if not
 if (!new File(imageFolder).exists()) {
@@ -124,10 +124,11 @@ private static String chooseDirectory(String message) {
  
 try {
     String pythonExecutable = chooseFile("Select the python executable")
+    print pythonExecutable
     if(pythonExecutable == null) {
         return null
     }
-    String outputFolder = chooseDirectory("Select the working folder")
+    String outputFolder = pathOutput + "\\blendmaps2"
     if(outputFolder == null) {
         return null
     }
