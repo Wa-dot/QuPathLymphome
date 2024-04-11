@@ -10,7 +10,7 @@
       "ymin": 29365.0,
       "xmax": 41027.4,
       "ymax": 29534.6,
-      "lymphoma_probability": 0.8271733362371926
+      "lymphoma_probability": 0.445
     },
     {
       "annotation_id": "52c0ee0a-2e94-49ca-8b0e-58d0de7ed76d",
@@ -21,7 +21,7 @@
       "ymin": 29534.6,
       "xmax": 41027.4,
       "ymax": 29704.2,
-      "lymphoma_probability": 0.8911904555083858
+      "lymphoma_probability": 0.345
     },
     {
       "annotation_id": "52c0ee0a-2e94-49ca-8b0e-58d0de7ed76d",
@@ -32,7 +32,7 @@
       "ymin": 29704.2,
       "xmax": 41027.4,
       "ymax": 29873.8,
-      "lymphoma_probability": 0.8787842158440734
+      "lymphoma_probability": 0.678
     },
     {
       "annotation_id": "52c0ee0a-2e94-49ca-8b0e-58d0de7ed76d",

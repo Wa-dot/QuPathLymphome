@@ -4,14 +4,32 @@ import java.io.Writer
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
+import java.awt.Rectangle
+import java.awt.image.BufferedImage
 import java.io.IOException
+import java.lang.reflect.Type
+import java.util.List
+import java.nio.file.Files
+import java.nio.file.Paths
+import javax.imageio.ImageIO
 import javax.swing.JFileChooser
+import javax.swing.JFrame
+import javax.swing.JOptionPane
 import qupath.lib.images.servers.openslide.OpenslideImageServer
+import qupath.lib.objects.PathObjects
+import qupath.lib.roi.ROIs
+import qupath.lib.regions.ImagePlane
+import qupath.lib.objects.classes.PathClassFactory
+import qupath.lib.gui.dialogs.Dialogs
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+
 // Optional output path (can be removed)
-def pathOutput = chooseDirectory("Choose the QupathLymphoma folder")
+def pathOutput = chooseDirectory('Choose the QupathLymphoma folder')
 
 var gson = GsonTools.getInstance(true)
 
@@ -24,13 +42,12 @@ imageName = GeneralTools.getNameWithoutExtension(imageData.getServer().getMetada
 imageName = imageName.substring(0, imageName.lastIndexOf('.'))
 print imageName
 // Construct the full path for the image folder
-def imageFolder = buildFilePath(pathOutput + "\\blendmaps2\\data", imageName)
+def imageFolder = buildFilePath(pathOutput + '\\blendmaps2\\data', imageName)
 
 // Check if the image folder exists, create it if not
 if (!new File(imageFolder).exists()) {
-    new File(imageFolder).mkdirs()
+  new File(imageFolder).mkdirs()
 }
-
 
 // Get selected annotations
 var rois = selectedObjects
@@ -56,94 +73,165 @@ for (roi in rois) {
   }
 
   // Build the final JSON file path within the annotation folder
-  var fileOutput = buildFilePath(annotationFolderPath, annotationName + ".json")
-  print "save annotation to: " + fileOutput
+  var fileOutput = buildFilePath(annotationFolderPath, annotationName + '.json')
+  print 'save annotation to: ' + fileOutput
 
   // Write (save) the JSON file
   try (Writer writer = new FileWriter(fileOutput)) {
-    gson.toJson(roi, writer);
+    gson.toJson(roi, writer)
   } catch (IOException e) {
     e.printStackTrace()
   }
-  
-  
-  //PARTIE IMAGE 
-  // Obtenez le chemin de l'image
-  String imagePath = QP.getCurrentImageData().getServer().getURIs()[0].getPath().substring(1);
 
-// Chargez l'image à partir du chemin
-  def originalImage = new OpenslideImageServer(QP.getCurrentImageData().getServer().getURIs()[0]);
-  print "image : "+originalImage
-// Obtenez la région sélectionnée (ROI)
-  def region = roi.getROI();
+  //PARTIE IMAGE
+  // Obtenez le chemin de l'image
+  String imagePath = QP.getCurrentImageData().getServer().getURIs()[0].getPath().substring(1)
+
+  // Chargez l'image à partir du chemin
+  def originalImage = new OpenslideImageServer(QP.getCurrentImageData().getServer().getURIs()[0])
+  print 'image : ' + originalImage
+  // Obtenez la région sélectionnée (ROI)
+  def region = roi.getROI()
   print region
   // Obtenez les coordonnées de la région
-int x = region.getBoundsX()
-int y = region.getBoundsY()
-int width = region.getBoundsWidth()
-int height = region.getBoundsHeight()
-  
+  int x = region.getBoundsX()
+  int y = region.getBoundsY()
+  int width = region.getBoundsWidth()
+  int height = region.getBoundsHeight()
+
   // Découpez la région de l'image originale
-  BufferedImage regionImage = originalImage.readRegion(1.5,x, y, width, height); //au plu le premier argument est grand au plus la résolution est petite
+  BufferedImage regionImage = originalImage.readRegion(1.5,x, y, width, height) //au plu le premier argument est grand au plus la résolution est petite
 
-// Construisez le chemin de sortie pour l'image PNG
-  String imageOutputPath = buildFilePath(annotationFolderPath, annotationName + ".png");
+  // Construisez le chemin de sortie pour l'image PNG
+  String imageOutputPath = buildFilePath(annotationFolderPath, annotationName + '.png')
 
-// Enregistrez l'image découpée au format PNG
-  ImageIO.write(regionImage, "png", new File(imageOutputPath));
+  // Enregistrez l'image découpée au format PNG
+  ImageIO.write(regionImage, 'png', new File(imageOutputPath))
 }
- 
+
 private static String chooseFile(String message) {
-    JFileChooser chooser = new JFileChooser()
-    chooser.setDialogTitle(message)
-    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-        File selectedFile = chooser.getSelectedFile()
-        return selectedFile.getAbsolutePath()
-    }
+  JFileChooser chooser = new JFileChooser()
+  chooser.setDialogTitle(message)
+  if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+    File selectedFile = chooser.getSelectedFile()
+    return selectedFile.getAbsolutePath()
+  }
     else {
-        print "No file selected. Exiting..."
-        return null
+    print 'No file selected. Exiting...'
+    return null
     }
 }
- 
- 
+
 private static String chooseDirectory(String message) {
-    JFileChooser chooser = new JFileChooser()
-    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
-    chooser.setDialogTitle(message)
-    if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-        File selectedFile = chooser.getSelectedFile()
-        return selectedFile.getAbsolutePath()
-    }
+  JFileChooser chooser = new JFileChooser()
+  chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY)
+  chooser.setDialogTitle(message)
+  if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+    File selectedFile = chooser.getSelectedFile()
+    return selectedFile.getAbsolutePath()
+  }
     else {
-        print "No file selected. Exiting..."
-        return null
+    print 'No file selected. Exiting...'
+    return null
     }
 }
- 
- 
+//Clear previous annotation
+selectObjects { p -> (p.getLevel() == 1) && (p.isAnnotation() == false) };
+clearSelectedObjects(false)
+
+boolean heatmap = false
+
+int res = JOptionPane.showOptionDialog(new JFrame(), 'Do you want to display previous heatmap on this image ?', 'Heatmap',
+     JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null,
+     new Object[] { 'Yes', 'No' }, JOptionPane.YES_OPTION)
+  if (res == JOptionPane.YES_OPTION) {
+  heatmap = true
+  println('Display on')
+  }
+  else {
+  println('display off')
+  }
+
+if (heatmap) {
+  // Utiliser Files pour parcourir tous les fichiers du répertoire
+  println(imageFolder)
+  Files.walk(Paths.get(imageFolder)).forEach { filePath ->
+        // Vérifier si le fichier est un fichier JSON
+        if (Files.isRegularFile(filePath) && filePath.toString().toLowerCase().endsWith('result.json')) {
+      try {
+        // Lire le contenu du fichier JSON
+        String jsonString = new String(Files.readAllBytes(filePath))
+        // Parser le contenu JSON et poursuivre comme avant
+        JsonElement element = JsonParser.parseString(jsonString)
+        JsonObject jsonObject = element.getAsJsonObject()
+        JsonArray tilesArray = jsonObject.getAsJsonArray('tiles')
+
+        // Définir le plan et les classes de chemin
+        int z = 0
+        int t = 0
+        def plane = ImagePlane.getPlane(z, t)
+        def pathclass0 = PathClassFactory.getPathClass('predictor-', 0x800000)
+        def pathclass1 = PathClassFactory.getPathClass('predictor+', 0x008000)
+
+        // Liste pour stocker les détections
+        def detections = []
+
+        // Itérer sur chaque élément du tableau JSON et créer des objets de détection
+        for (JsonElement tileElement : tilesArray) {
+          JsonObject tileObject = tileElement.getAsJsonObject()
+          // Extraire x, y, largeur et hauteur
+          double x = tileObject.get('xmin').getAsDouble()
+          double y = tileObject.get('ymin').getAsDouble()
+          double probability = tileObject.get('lymphoma_probability').getAsDouble()
+          double width = Math.abs(tileObject.get('xmax').getAsDouble() - x)
+          double height = Math.abs(tileObject.get('ymax').getAsDouble() - y)
+
+          // Créer une ROI basée sur les coordonnées du tile
+          def roi = ROIs.createRectangleROI(x, y, width, height, plane)
+
+          // Créer un objet de détection basé sur la probabilité
+          def detection
+          if (probability < 0.5) {
+            detection = PathObjects.createDetectionObject(roi, pathclass0)
+                } else {
+            detection = PathObjects.createDetectionObject(roi, pathclass1)
+          }
+
+          // Ajouter l'objet de détection à la liste
+          detections.add(detection)
+        }
+
+        // Ajouter tous les objets de détection au projet QuPath
+        addObjects(detections)
+        } catch (Exception e) {
+        println('Erreur lors de la lecture du fichier: ' + filePath.toString())
+        e.printStackTrace()
+      }
+        }
+  }
+ }
+
 try {
-    String pythonExecutable = chooseFile("Select the python executable")
-    print pythonExecutable
-    if(pythonExecutable == null) {
-        return null
-    }
-    String outputFolder = pathOutput + "\\blendmaps2"
-    if(outputFolder == null) {
-        return null
-    }
-    //pythonScript = new File(new File(outputFolder), "script.py").absolutePath
-    var pythonScript = buildFilePath(outputFolder, "script.py")
- 
-    
-    //var name = QP.getCurrentImageName()
-    var path = QP.getCurrentImageData().getServer().getURIs()[0].getPath().substring(1)
-    ProcessBuilder processBuilder = new ProcessBuilder(pythonExecutable, pythonScript, "--path", outputFolder, "--wsi", path)
-    processBuilder.inheritIO()
-    Process process = processBuilder.start()
-    print "Executing python script"
-    int exitCode = process.waitFor()
-    print "python script exited with code " + exitCode
-} catch(IOException | InterruptedException e) {
-    e.printStackTrace()
+  String pythonExecutable = chooseFile('Select the python executable')
+  print pythonExecutable
+  if (pythonExecutable == null) {
+    return null
+  }
+  String outputFolder = pathOutput + '\\blendmaps2'
+  if (outputFolder == null) {
+    return null
+  }
+  //pythonScript = new File(new File(outputFolder), "script.py").absolutePath
+  var pythonScript = buildFilePath(outputFolder, 'script.py')
+
+  //var name = QP.getCurrentImageName()
+  var path = QP.getCurrentImageData().getServer().getURIs()[0].getPath().substring(1)
+  ProcessBuilder processBuilder = new ProcessBuilder(pythonExecutable, pythonScript, '--path', outputFolder, '--wsi', path)
+  processBuilder.inheritIO()
+  Process process = processBuilder.start()
+  print 'Executing python script'
+  int exitCode = process.waitFor()
+  print 'python script exited with code ' + exitCode
+} catch (IOException | InterruptedException e) {
+  e.printStackTrace()
 }

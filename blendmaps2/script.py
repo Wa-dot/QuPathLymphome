@@ -11,12 +11,13 @@ from generateDatas import create_proba_json
 
 external_stylesheets = ['assets/style.css']
 df = []
+web_open = False
 
-path_name_image = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*.png"
+path_name_image = "C:/Users/Computer/Desktop/Projet/QuPathLymphome/blendmaps2/data/**/*.png"
 # path_name_annotation = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*.json"
 # path_name_wsifolders = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/"
 # create_proba_json(path_name_wsifolders,path_name_annotation)
-path_name_data = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*result.json"
+path_name_data = "C:/Users/Computer/Desktop/Projet/QuPathLymphome/blendmaps2/data/**/*result.json"
 
 
 for file_ in glob.glob(path_name_image, recursive = True):
@@ -169,5 +170,5 @@ def exit_button_click(n_clicks):
         return None
 
 if __name__ == '__main__':
-    webbrowser.open_new('http://127.0.0.1:8888/')
-    app.run(debug=True, port=8888)
+    web_open : webbrowser.open_new('http://127.0.0.1:8888/')
+    app.run(debug=True, port=8888, use_reloader=False)
