@@ -1,14 +1,5 @@
-import com.google.gson.GsonBuilder
-import java.io.FileWriter
-import java.io.Writer
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.awt.Rectangle
+/* groovylint-disable JavaIoPackageAccess, LineLength */
 import java.awt.image.BufferedImage
-import java.io.IOException
-import java.lang.reflect.Type
-import java.util.List
 import java.nio.file.Files
 import java.nio.file.Paths
 import javax.imageio.ImageIO
@@ -20,9 +11,6 @@ import qupath.lib.objects.PathObjects
 import qupath.lib.roi.ROIs
 import qupath.lib.regions.ImagePlane
 import qupath.lib.objects.classes.PathClassFactory
-import qupath.lib.gui.dialogs.Dialogs
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -74,7 +62,6 @@ for (roi in rois) {
 
   // Build the final JSON file path within the annotation folder
   var fileOutput = buildFilePath(annotationFolderPath, annotationName + '.json')
-  print 'save annotation to: ' + fileOutput
 
   // Write (save) the JSON file
   try (Writer writer = new FileWriter(fileOutput)) {
@@ -84,9 +71,6 @@ for (roi in rois) {
   }
 
   //PARTIE IMAGE
-  // Obtenez le chemin de l'image
-  String imagePath = QP.getCurrentImageData().getServer().getURIs()[0].getPath().substring(1)
-
   // Chargez l'image à partir du chemin
   def originalImage = new OpenslideImageServer(QP.getCurrentImageData().getServer().getURIs()[0])
   print 'image : ' + originalImage
@@ -100,7 +84,7 @@ for (roi in rois) {
   int height = region.getBoundsHeight()
 
   // Découpez la région de l'image originale
-  BufferedImage regionImage = originalImage.readRegion(1.5,x, y, width, height) //au plu le premier argument est grand au plus la résolution est petite
+  BufferedImage regionImage = originalImage.readRegion(1.5,x, y, width, height) //au plus le premier argument est grand au plus la résolution est petite
 
   // Construisez le chemin de sortie pour l'image PNG
   String imageOutputPath = buildFilePath(annotationFolderPath, annotationName + '.png')
@@ -136,8 +120,8 @@ private static String chooseDirectory(String message) {
     }
 }
 //Clear previous annotation
-selectObjects { p -> (p.getLevel() == 1) && (p.isAnnotation() == false) };
-clearSelectedObjects(false)
+// selectObjects { p -> (p.getLevel() == 1) && (p.isAnnotation() == false) };
+// clearSelectedObjects(false)
 
 boolean heatmap = false
 
@@ -151,10 +135,10 @@ int res = JOptionPane.showOptionDialog(new JFrame(), 'Do you want to display pre
   else {
   println('display off')
   }
-
+selectObjects { p -> (p.getLevel() == 1) && (p.isAnnotation() == false) };
+clearSelectedObjects(false)
 if (heatmap) {
   // Utiliser Files pour parcourir tous les fichiers du répertoire
-  println(imageFolder)
   Files.walk(Paths.get(imageFolder)).forEach { filePath ->
         // Vérifier si le fichier est un fichier JSON
         if (Files.isRegularFile(filePath) && filePath.toString().toLowerCase().endsWith('result.json')) {
@@ -170,8 +154,6 @@ if (heatmap) {
         int z = 0
         int t = 0
         def plane = ImagePlane.getPlane(z, t)
-        def pathclass0 = PathClassFactory.getPathClass('predictor-', 0x800000)
-        def pathclass1 = PathClassFactory.getPathClass('predictor+', 0x008000)
 
         // Liste pour stocker les détections
         def detections = []
@@ -191,10 +173,52 @@ if (heatmap) {
 
           // Créer un objet de détection basé sur la probabilité
           def detection
-          if (probability < 0.5) {
-            detection = PathObjects.createDetectionObject(roi, pathclass0)
-                } else {
-            detection = PathObjects.createDetectionObject(roi, pathclass1)
+          // def pathclass0 = PathClassFactory.getPathClass('predictor-', 0xffffff)
+          // def pathclass1 = PathClassFactory.getPathClass('predictor+', 0x000000)
+          probability *= 10
+          def proba = (int)probability
+
+          def pathclassGreen = PathClass.getInstance('predictor+')
+
+
+          def pathclassLightRed = PathClass.getInstance('predictor+1')
+          def pathclassLightLightRed = PathClass.getInstance('predictor-9')
+
+          def pathclassOrange = PathClass.getInstance('predictor+2')
+          def pathclassRed = PathClassFactory.getPathClass('predictor-60')
+
+          def pathclassBlack = PathClass.getInstance('predictor@')
+          switch (proba) {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+              detection = PathObjects.createDetectionObject(roi, pathclassGreen)
+              break
+            case 5:
+            case 6:
+              detection = PathObjects.createDetectionObject(roi, pathclassOrange)
+              break
+
+            case 7:
+              detection = PathObjects.createDetectionObject(roi, pathclassLightLightRed)
+              break
+
+            case 8:
+              detection = PathObjects.createDetectionObject(roi, pathclassLightRed)
+              break
+
+            case 9:
+            detection = PathObjects.createDetectionObject(roi, pathclassRed)
+              break
+            case 10:
+              detection = PathObjects.createDetectionObject(roi, pathclassRed)
+              break
+
+            default:
+              println('Problem')
+              detection = PathObjects.createDetectionObject(roi, pathclassBlack)
+              break
           }
 
           // Ajouter l'objet de détection à la liste
@@ -209,7 +233,7 @@ if (heatmap) {
       }
         }
   }
- }
+}
 
 try {
   String pythonExecutable = chooseFile('Select the python executable')

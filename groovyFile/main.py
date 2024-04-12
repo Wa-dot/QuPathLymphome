@@ -42,9 +42,9 @@ def save_lymphoma_probabilities(lymphoma_probabilities, output_file):
         json.dump(lymphoma_probabilities, f)
 def main():
     # Chemin du répertoire contenant les fichiers d'annotations
-    annotations_directory = r'./jsonfile'
+    annotations_directory = 'C:/Users/Computer/Desktop/Projet/QuPathLymphome/blendmaps2/data'
     # Chemin du répertoire de sortie pour les fichiers de probabilités de lymphomes
-    output_directory = r'./jsonfile_proba'
+    output_directory = 'C:/Users/Computer/Desktop/Projet/QuPathLymphome/blendmaps2/data'
     # Nombre de probabilités à générer pour chaque annotation
     num_probabilities = 1
     num_tiles_per_annotation = 10
