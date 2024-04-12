@@ -30,7 +30,7 @@ def generate_tile_probabilities(annotation, num_tiles_per_annotation,wsi_folder)
                 "ymin": tile_ymin,
                 "xmax": tile_xmax,
                 "ymax": tile_ymax,
-                "lymphoma_probability": probability
+                "lymphome_probability": probability
             })
     
     json_file = {
@@ -39,39 +39,36 @@ def generate_tile_probabilities(annotation, num_tiles_per_annotation,wsi_folder)
     }
     return json_file
  
- 
-def create_proba_json(wsi_folders, annotation_folders):
-    # Nombre de probabilités à générer pour chaque annotation
-    num_tiles_per_annotation = 10
 
-    # Parcourir tous les fichiers JSON dans le répertoire des annotations
-    for idx, wsi_folder in enumerate(os.listdir(wsi_folders)):
-        for annotation_folder in annotation_folders[idx]:
-            # Vérifier si des fichiers d'annotation existent déjà dans le dossier
+def create_proba(dirName):
+    num_tiles_per_annotation =20
+    wsi_folders_name = os.listdir(dirName+"/data")
+
+    for wsi_folder in wsi_folders_name:
+        annotation_folders_name = os.listdir(f'{dirName}/data/{wsi_folder}')
+        for annotation_folder in annotation_folders_name:
             existing_annotation_files = [
-                filename for filename in os.listdir(annotation_folder) if filename.endswith('result.json')
+            filename for filename in os.listdir(f'{dirName}/data/{wsi_folder}/{annotation_folder}') if filename.endswith('result.json')
             ]
             if not existing_annotation_files:  # Si aucun fichier d'annotation n'existe
-                for filename in os.listdir(annotation_folder):
+                for filename in os.listdir(dirName+"/data/"+wsi_folder+"/"+annotation_folder):
                     if filename.endswith('.json'):
-                        annotation_file = os.path.join(annotation_folder, filename)
-
                         # Lire les annotations à partir du fichier JSON
-                        with open(annotation_file, 'r') as f:
-                            annotations = json.load(f)
+                        with open(f'{dirName}/data/{wsi_folder}/{annotation_folder}/{filename}', 'r') as f:
+                            annotation = json.load(f)
+                        # print("annotation: "+annotation)
+                        filename = filename.split('.')[0]
+                        output_file = f'{dirName}/data/{wsi_folder}/{annotation_folder}/{filename}_result.json'
 
-                        # Parcourir chaque annotation dans la liste
-                        for idx, annotation in enumerate(annotations):
-                            output_file = os.path.join(annotation_folder, f'{os.path.splitext(filename)[0]}_{idx}result.json')
-
-                            # Générer les probabilités de lymphomes pour cette annotation
-                            lymphoma_probabilities = generate_tile_probabilities(annotation, num_tiles_per_annotation,
+                        # Générer les probabilités de lymphomes pour cette annotation
+                        lymphome_probabilities = generate_tile_probabilities(annotation, num_tiles_per_annotation,
                                                                                  wsi_folder)
 
-                            # Enregistrer les probabilités de lymphomes dans un fichier JSON
-                            with open(output_file, 'w') as f:
-                                json.dump(lymphoma_probabilities, f)
+                        # Enregistrer les probabilités de lymphomes dans un fichier JSON
+                        with open(output_file, 'w') as f:
+                            json.dump(lymphome_probabilities, f)
 
-                            print(f'Probabilités aléatoires de présence de lymphomes pour {filename} (annotation {idx}) générées et enregistrées dans:', output_file)
+                        print(f'Probabilités aléatoires de présence de lymphomes pour {filename} (annotation) générées et enregistrées dans:', output_file)
             else:
                 print(f"Des fichiers d'annotation existent déjà dans le dossier {annotation_folder}. Aucune nouvelle génération de fichiers n'est nécessaire.")
+                        

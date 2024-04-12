@@ -7,13 +7,18 @@ import webbrowser
 from PIL import Image
 import json
 from dash.exceptions import PreventUpdate
-from generateDatas import create_proba_json
+from generateDatas import create_proba
 import plotly.graph_objects as go
 
 external_stylesheets = ['assets/style.css']
 df = []
 web_open = False
 dirName = os.path.dirname(__file__)
+#récupérer les chemins 
+
+create_proba(dirName)
+
+
 path_name_image = dirName+"/data/**/*.png"
 path_name_data = dirName+"/data/**/*result.json"
 print(path_name_data)
@@ -67,9 +72,9 @@ app.layout = html.Div(
           html.Div([
               html.H4('Filtrer les lymphomes'),
               dcc.Checklist(
-                id='lymphoma-filter',
+                id='lymphome-filter',
                 options=[
-                   {'label': 'Lymphomes > 0.5', 'value': 'lymphoma_above_0.5'}
+                   {'label': 'Lymphomes > 0.5', 'value': 'lymphome_above_0.5'}
                 ],
                 value=[]
               )
@@ -136,7 +141,7 @@ def update_heatmap(wsi,annotation):
     
     x_values = [item['x'] for item in table_data]
     y_values = [item['y'] for item in table_data]
-    probabilities = [item['lymphoma_probability'] for item in table_data]
+    probabilities = [item['lymphome_probability'] for item in table_data]
     width = np.max(x_values) + 1
     height = np.max(y_values) + 1
     proba_matrix = np.zeros((height, width))
@@ -164,7 +169,7 @@ def update_heatmap(wsi,annotation):
 #Table part
 @callback(
     Output('table-container', 'children'),
-    [Input('dropdown-wsi', 'value'), Input('dropdown-annotation', 'value'), Input('lymphoma-filter', 'value')]
+    [Input('dropdown-wsi', 'value'), Input('dropdown-annotation', 'value'), Input('lymphome-filter', 'value')]
 )
 def update_table(wsi, annotation,filter_value):
     dff = df[df['wsi'] == wsi]
@@ -178,8 +183,8 @@ def update_table(wsi, annotation,filter_value):
     # Création du DataFrame pour afficher les données dans le tableau
     df_table = pandas.DataFrame(table_data)
     
-    if 'lymphoma_above_0.5' in filter_value:
-        df_table = df_table.query('lymphoma_probability > 0.9')
+    if 'lymphome_above_0.5' in filter_value:
+        df_table = df_table.query('lymphome_probability > 0.9')
     # Création du composant DataTable
     table = dash_table.DataTable(
         id='table',
