@@ -13,13 +13,10 @@ import plotly.graph_objects as go
 external_stylesheets = ['assets/style.css']
 df = []
 web_open = False
-
-path_name_image = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*.png"
-# path_name_annotation = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*.json"
-# path_name_wsifolders = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/"
-# create_proba_json(path_name_wsifolders,path_name_annotation)
-path_name_data = "C:/Users/tom62/Desktop/QuPathLymphome/blendmaps2/data/**/*result.json"
-
+dirName = os.path.dirname(__file__)
+path_name_image = dirName+"/data/**/*.png"
+path_name_data = dirName+"/data/**/*result.json"
+print(path_name_data)
 
 for file_ in glob.glob(path_name_image, recursive = True):
     base, image_name = os.path.split(file_)
@@ -32,7 +29,6 @@ for file_ in glob.glob(path_name_data, recursive=True):
     try:
         with open(file_, "r") as json_file:
             json_data = json_file.read()
-            # print("JSON data read:", json_data)  # Add this line to inspect the data
             data.append(json.loads(json_data))
     except json.JSONDecodeError as e:
         print("Error decoding JSON:", e)
