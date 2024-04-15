@@ -7,9 +7,9 @@ import webbrowser
 from PIL import Image
 import json
 from dash.exceptions import PreventUpdate
-from generateDatas import create_proba
+from generateDatas import create_proba,prob_to_rgb
 import plotly.graph_objects as go
-
+import cv2
 import dash
 from dash.dependencies import Input, Output, State
 import pandas as pd
@@ -184,6 +184,20 @@ def update_image(wsi, annotation):
     img_sequence.append(img)
     names.append(dff['image'].iloc[0])
     img_bis = np.array(Image.open(dff['path'].iloc[0]).reduce(4))
+
+    prob_matrix = np.random.rand(img_bis.shape[0], img_bis.shape[1])  # Matrice de probabilités aléatoires de taille 20x20
+    rgb_matrix= prob_to_rgb(prob_matrix)
+    rgb_matrix = rgb_matrix.astype(np.uint8)
+
+    print("Shape of rgb_matrix:", rgb_matrix.shape)
+    print("Data type of rgb_matrix:", rgb_matrix.dtype)
+
+    # Appliquer l'overlay de la matrice de probabilités redimensionnée sur l'image
+    overlay = cv2.applyColorMap(rgb_matrix, cv2.COLORMAP_JET)
+    alpha = 0.5  # Facteur d'opacité
+    output = cv2.addWeighted(overlay, alpha, img, 1, 0)
+    img_sequence.append(output)
+
     img_sequence.append(img_bis)
     names.append(dff['image'].iloc[0]+' bis')
     img_sequence = np.stack(img_sequence, axis=0)
