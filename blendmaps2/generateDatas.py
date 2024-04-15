@@ -1,7 +1,7 @@
 import random
 import json
 import os
-
+import numpy as np
 def generate_tile_probabilities(annotation, num_tiles_per_annotation,wsi_folder):
     tile_probabilities = []
     annotation_id = annotation["id"]
@@ -72,3 +72,27 @@ def create_proba(dirName):
             else:
                 print(f"Des fichiers d'annotation existent déjà dans le dossier {annotation_folder}. Aucune nouvelle génération de fichiers n'est nécessaire.")
                         
+
+
+def prob_to_rgb(prob_matrix):
+    # Définir l'échelle de couleur
+    color_scale = [
+        [0.0, [0, 0, 255]],    # Bleu pour les probabilités basses
+        [0.5, [255, 255, 255]],# Blanc pour les probabilités moyennes
+        [1.0, [255, 0, 0]]     # Rouge pour les probabilités élevées
+    ]
+    
+    # Convertir les probabilités en valeurs de couleur en utilisant l'échelle définie
+    def scale_color(prob):
+        for i in range(len(color_scale) - 1):
+            if color_scale[i][0] <= prob <= color_scale[i+1][0]:
+                start_prob, start_color = color_scale[i]
+                end_prob, end_color = color_scale[i+1]
+                alpha = (prob - start_prob) / (end_prob - start_prob)
+                return [int((1 - alpha) * start_color[j] + alpha * end_color[j]) for j in range(3)]
+        return color_scale[-1][1]
+
+    # Appliquer la fonction d'échelle de couleur à chaque élément de la matrice de probabilités
+    rgb_matrix = np.array([[scale_color(prob) for prob in row] for row in prob_matrix])
+
+    return rgb_matrix
