@@ -195,7 +195,7 @@ def update_image(wsi, annotation):
     # Appliquer l'overlay de la matrice de probabilités redimensionnée sur l'image
     overlay = cv2.applyColorMap(rgb_matrix, cv2.COLORMAP_JET)
     alpha = 0.5  # Facteur d'opacité
-    output = cv2.addWeighted(overlay, alpha, img, 1, 0)
+    output = cv2.addWeighted(overlay, alpha, img, 1-alpha, 0)
     img_sequence.append(output)
 
     img_sequence.append(img_bis)
