@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "id": "cd3dd380-6275-4785-b26d-fab002fd6c62",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [32823, 140857],
+        [33803, 140857],
+        [33803, 141355],
+        [32823, 141355],
+        [32823, 140857]
+      ]
+    ]
+  },
+  "properties": {
+    "objectType": "annotation",
+    "name": "fedhbuhb"
+  }
+}

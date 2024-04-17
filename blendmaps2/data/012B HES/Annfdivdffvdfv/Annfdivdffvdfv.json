@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "id": "ef9be18e-9f56-425a-9704-1e051fa478d4",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [31429, 114246],
+        [38847, 114246],
+        [38847, 117784],
+        [31429, 117784],
+        [31429, 114246]
+      ]
+    ]
+  },
+  "properties": {
+    "objectType": "annotation",
+    "name": "Annfdivdffvdfv"
+  }
+}

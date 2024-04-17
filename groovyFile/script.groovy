@@ -123,114 +123,79 @@ private static String chooseDirectory(String message) {
 // selectObjects { p -> (p.getLevel() == 1) && (p.isAnnotation() == false) };
 // clearSelectedObjects(false)
 
-boolean heatmap = false
-
 int res = JOptionPane.showOptionDialog(new JFrame(), 'Do you want to display previous heatmap on this image ?', 'Heatmap',
      JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null,
      new Object[] { 'Yes', 'No' }, JOptionPane.YES_OPTION)
   if (res == JOptionPane.YES_OPTION) {
-  heatmap = true
   println('Display on')
+  displayHeatMapOnQupath(imageFolder)
   }
   else {
   println('display off')
   }
-selectObjects { p -> (p.getLevel() == 1) && (p.isAnnotation() == false) };
-clearSelectedObjects(false)
-if (heatmap) {
+ 
+def displayHeatMapOnQupath(imageFolder) {
+  selectObjects { p -> (p.getLevel() == 1) && (p.isAnnotation() == false) };
+  clearSelectedObjects(false)
+  println('Displaying heatmap')
   // Utiliser Files pour parcourir tous les fichiers du répertoire
   Files.walk(Paths.get(imageFolder)).forEach { filePath ->
         // Vérifier si le fichier est un fichier JSON
         if (Files.isRegularFile(filePath) && filePath.toString().toLowerCase().endsWith('result.json')) {
-      try {
-        // Lire le contenu du fichier JSON
-        String jsonString = new String(Files.readAllBytes(filePath))
-        // Parser le contenu JSON et poursuivre comme avant
-        JsonElement element = JsonParser.parseString(jsonString)
-        JsonObject jsonObject = element.getAsJsonObject()
-        JsonArray tilesArray = jsonObject.getAsJsonArray('tiles')
-
-        // Définir le plan et les classes de chemin
-        int z = 0
-        int t = 0
-        def plane = ImagePlane.getPlane(z, t)
-
-        // Liste pour stocker les détections
-        def detections = []
-
-        // Itérer sur chaque élément du tableau JSON et créer des objets de détection
-        for (JsonElement tileElement : tilesArray) {
-          JsonObject tileObject = tileElement.getAsJsonObject()
-          // Extraire x, y, largeur et hauteur
-          double x = tileObject.get('xmin').getAsDouble()
-          double y = tileObject.get('ymin').getAsDouble()
-          double probability = tileObject.get('lymphome_probability').getAsDouble()
-          double width = Math.abs(tileObject.get('xmax').getAsDouble() - x)
-          double height = Math.abs(tileObject.get('ymax').getAsDouble() - y)
-
-          // Créer une ROI basée sur les coordonnées du tile
-          def roi = ROIs.createRectangleROI(x, y, width, height, plane)
-
+        try {
+          // Lire le contenu du fichier JSON
+          String jsonString = new String(Files.readAllBytes(filePath))
+          // Parser le contenu JSON et poursuivre comme avant
+          JsonElement element = JsonParser.parseString(jsonString)
+          JsonObject jsonObject = element.getAsJsonObject()
+          JsonArray tilesArray = jsonObject.getAsJsonArray('tiles')
+ 
+          // Définir le plan et les classes de chemin
+          int z = 0
+          int t = 0
+          def plane = ImagePlane.getPlane(z, t)
+ 
+          // Liste pour stocker les détections
+          def detections = []
+ 
+          // Itérer sur chaque élément du tableau JSON et créer des objets de détection
+          for (JsonElement tileElement : tilesArray) {
+            JsonObject tileObject = tileElement.getAsJsonObject()
+            // Extraire x, y, largeur et hauteur
+            double x = tileObject.get('xmin').getAsDouble()
+            double y = tileObject.get('ymin').getAsDouble()
+            double probability = tileObject.get('lymphoma_probability').getAsDouble()
+            double width = Math.abs(tileObject.get('xmax').getAsDouble() - x)
+            double height = Math.abs(tileObject.get('ymax').getAsDouble() - y)
+ 
+            // Créer une ROI basée sur les coordonnées du tile
+            def roi = ROIs.createRectangleROI(x, y, width, height, plane)
+ 
           // Créer un objet de détection basé sur la probabilité
-          def detection
-          // def pathclass0 = PathClassFactory.getPathClass('predictor-', 0xffffff)
-          // def pathclass1 = PathClassFactory.getPathClass('predictor+', 0x000000)
-          probability *= 10
-          def proba = (int)probability
-
-          def pathclassGreen = PathClass.getInstance('predictor+')
-
-
-          def pathclassLightRed = PathClass.getInstance('predictor+1')
-          def pathclassLightLightRed = PathClass.getInstance('predictor-9')
-
-          def pathclassOrange = PathClass.getInstance('predictor+2')
-          def pathclassRed = PathClassFactory.getPathClass('predictor-60')
-
-          def pathclassBlack = PathClass.getInstance('predictor@')
-          switch (proba) {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-              detection = PathObjects.createDetectionObject(roi, pathclassGreen)
-              break
-            case 5:
-            case 6:
-              detection = PathObjects.createDetectionObject(roi, pathclassOrange)
-              break
-
-            case 7:
-              detection = PathObjects.createDetectionObject(roi, pathclassLightLightRed)
-              break
-
-            case 8:
-              detection = PathObjects.createDetectionObject(roi, pathclassLightRed)
-              break
-
-            case 9:
-            detection = PathObjects.createDetectionObject(roi, pathclassRed)
-              break
-            case 10:
-              detection = PathObjects.createDetectionObject(roi, pathclassRed)
-              break
-
-            default:
-              println('Problem')
-              detection = PathObjects.createDetectionObject(roi, pathclassBlack)
-              break
+ 
+            def pathclass = PathClass.getInstance('predictor+')
+ 
+            detection = PathObjects.createDetectionObject(roi, pathclass)
+            def red = (170 * probability) + 20
+            def green = (170 * (1 - probability)) + 20
+            def blue = 40
+ 
+            if (probability >= 0 && probability <= 1) {
+              detection.setColor((int)red, (int)green, (int)blue)
+            }
+          else {
+              detection.setColor(255, 255, 255)}
+ 
+            // Ajouter l'objet de détection à la liste
+            detections.add(detection)
           }
-
-          // Ajouter l'objet de détection à la liste
-          detections.add(detection)
-        }
-
-        // Ajouter tous les objets de détection au projet QuPath
-        addObjects(detections)
+ 
+          // Ajouter tous les objets de détection au projet QuPath
+          addObjects(detections)
         } catch (Exception e) {
-        println('Erreur lors de la lecture du fichier: ' + filePath.toString())
-        e.printStackTrace()
-      }
+          println('Erreur lors de la lecture du fichier: ' + filePath.toString())
+          e.printStackTrace()
+        }
         }
   }
 }

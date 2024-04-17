@@ -7,7 +7,7 @@ import webbrowser
 from PIL import Image
 import json
 from dash.exceptions import PreventUpdate
-from generateDatas import create_proba,prob_to_rgb
+from generateDatas import create_proba,create_heatmap_png
 import plotly.graph_objects as go
 import cv2
 import dash
@@ -23,20 +23,25 @@ web_open = False
 dirName = os.path.dirname(__file__)
 #récupérer les chemins 
 
-create_proba(dirName)
+tile_size = 50
 
+
+create_proba(dirName,tile_size)
+create_heatmap_png(dirName,tile_size)
 
 path_name_image = dirName+"/data/**/*.png"
 path_name_data = dirName+"/data/**/*result.json"
-print(path_name_data)
-
-for file_ in glob.glob(path_name_image, recursive = True):
-    base, image_name = os.path.split(file_)
-    base, annotation = os.path.split(base)
-    base, wsi = os.path.split(base)
-    df.append({'annotation': annotation, 'wsi': wsi, 'image': image_name, 'path': file_})
 
 data = []    
+
+for file_ in glob.glob(path_name_image, recursive = True):
+    if not file_.endswith("heatmap.png"):
+        base, image_name = os.path.split(file_)
+        base, annotation = os.path.split(base)
+        base, wsi = os.path.split(base)
+        df.append({'annotation': annotation, 'wsi': wsi, 'image': image_name, 'path': file_})
+    
+
 for file_ in glob.glob(path_name_data, recursive=True):
     try:
         with open(file_, "r") as json_file:
@@ -46,14 +51,15 @@ for file_ in glob.glob(path_name_data, recursive=True):
         print("Error decoding JSON:", e)
 
 
+
 df = pandas.DataFrame(df)
 #ajout de la colonne data
 df['data'] =  data
-print(df)
+
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = "Analyse cliniques"
-
+ 
 exit_layout = html.Div(
     className="exit-page",
     children=[
@@ -61,20 +67,20 @@ exit_layout = html.Div(
         html.P("Ce site est inaccessible."),
     ]
 )
-
+ 
 exit_state = False
-
+ 
 # Détermination du layout initial en fonction de exit_state
 if exit_state:
     initial_layout = exit_layout
 else:
-    
+   
     initial_layout = html.Div(
     id="app-container",
     children=[
         html.Div([
-            html.Button('Exit', id='exit-button'),
-            html.H1('Dashboard')
+            dbc.Button("Exit", id='exit-button'),
+            html.H2('Dashboard', className= "title")
         ]),
         html.Div(id="selection-part", children=[
             html.Div([
@@ -89,27 +95,57 @@ else:
         html.Div(
             id="main-container",
             children=[
-                dcc.Graph(id='images'),
-                dcc.Graph(id='heatmap'),
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardBody([
+                                html.H4("Annotation et Heatmap", className="card-title"),
+                                dcc.Graph(id='images'),
+                                ])
+                        ],className="rounded-3")
+                    ], width= 12)
+                ],className="rounded-3"),
+                dbc.Row([
+    dbc.Col([
+        dbc.Card([
+            dbc.CardBody([
+                html.H4("Heatmap 2", className="card-title"),
                 html.Div([
-                    html.H4('Table des résultats'),
-                    html.Div([
-                        html.H4('Filtrer les lymphomes'),
-                        dcc.Checklist(
-                            id='lymphome-filter',
-                            options=[
-                                {'label': 'Lymphomes > 0.5', 'value': 'lymphome_above_0.5'}
-                            ],
-                            value=[]
-                        )
-                    ]),
-                    html.Div(id='table-container'),
+                   dcc.Graph(id='heatmap')
+                ],style={'display':'flex','align-items': 'center', 'justify-content': 'center','height':'100%'})
+            ]),
+        ], className="h-100"),  # Utilisation de la classe 'h-100' pour spécifier une hauteur de 100%
+    ], width=6),
+    dbc.Col([
+        dbc.Card([
+            dbc.CardBody([
+                html.H4("Boxplot des probabilités de lymphomes", className="card-title"),
+                dcc.Graph(id="boxplot")
+            ]),
+        ], className="h-100"),  # Utilisation de la classe 'h-100' pour spécifier une hauteur de 100%
+    ], width=6)
+], className="align-items-stretch"),
+                    dbc.Card([
+                        dbc.CardBody([
+                            html.Div([
+                                html.H4('Filtre des probabilité de lymphome par tuile'),
+                                dcc.Slider(id='lymphome-slider',
+                                       min=0,
+                                       max=1,
+                                       step=0.01,
+                                       marks={i/5: str(i/5) for i in range(11)},
+                                       value=0.5),
+                                       html.Div(id='slider-value-output'),
+                                        html.Div(id='table-container'),
+                                        ],
+                                        className="row"
+                                        ),
+                                        dcc.Location(id='url', refresh=False),
+                                       ],className= "rounded-3"),
+                    ])
                 ]),
-            ],
-            className="row"
-        ),
-        dcc.Location(id='url', refresh=False),
-
+ 
+ 
         # Ajoutez la boîte de dialogue modale pour la confirmation de fermeture
         dbc.Modal(
             [
@@ -128,8 +164,8 @@ else:
         ),
     ]
 )
-
-app.layout = initial_layout 
+ 
+app.layout = initial_layout
 
 
 @app.callback(
@@ -183,22 +219,20 @@ def update_image(wsi, annotation):
     img = np.array(Image.open(dff['path'].iloc[0]).reduce(4))
     img_sequence.append(img)
     names.append(dff['image'].iloc[0])
-    img_bis = np.array(Image.open(dff['path'].iloc[0]).reduce(4))
-
-    prob_matrix = np.random.rand(img_bis.shape[0], img_bis.shape[1])  # Matrice de probabilités aléatoires de taille 20x20
-    rgb_matrix= prob_to_rgb(prob_matrix)
-    rgb_matrix = rgb_matrix.astype(np.uint8)
-
-    print("Shape of rgb_matrix:", rgb_matrix.shape)
-    print("Data type of rgb_matrix:", rgb_matrix.dtype)
-
+    
+    
+    heatmap_path = f'{dirName}/data/{wsi}/{annotation}/{annotation}_heatmap.png'
+    heatmap = np.array(Image.open(heatmap_path).reduce(4))
+    heatmap_without_alpha = heatmap[:, :, :3]
+    print(heatmap_without_alpha.shape)
+    
+    print(img.shape)
     # Appliquer l'overlay de la matrice de probabilités redimensionnée sur l'image
-    overlay = cv2.applyColorMap(rgb_matrix, cv2.COLORMAP_JET)
+    
     alpha = 0.5  # Facteur d'opacité
-    output = cv2.addWeighted(overlay, alpha, img, 1-alpha, 0)
+    output = cv2.addWeighted(heatmap_without_alpha, alpha, img, 1-alpha, 0)
     img_sequence.append(output)
-
-    img_sequence.append(img_bis)
+   
     names.append(dff['image'].iloc[0]+' bis')
     img_sequence = np.stack(img_sequence, axis=0)
         #PROBLEME IL NOUS FAUT LES DIMENSIONS DE LA VRAIE IMAGE POUR FAIRE LE RAPPORT AVEC LA PNG AFIN DE SAVOIR OU POSITIONNER QUELLE TILE SUR LA PNG CAR LES ECHELLE NES SONT PAS LES MEMES
@@ -222,10 +256,8 @@ def update_image(wsi, annotation):
 def update_heatmap(wsi, annotation):
     dff = df[df['wsi'] == wsi]
     dff = dff[dff['annotation'] == annotation]
-
-    # # Imprimez le DataFrame filtré juste avant d'accéder aux données de la heatmap
-    # print("DataFrame filtré (dff) avant de créer la heatmap:")
-    # print(dff)
+    img = Image.open(dff['path'].iloc[0]).reduce(5)
+   
 
     if not dff.empty:
         annotations = dff['data'].iloc[0]['tiles']
@@ -255,63 +287,85 @@ def update_heatmap(wsi, annotation):
             'y': y_values,
             'x': x_values,
             'type': 'heatmap',
-            'colorscale': 'bluered',
+            'colorscale': 'rdbu',
             'colorbar': {'title': 'Probability'},
         }]
-
-        # Déterminer la taille de la heatmap en fonction du nombre de tuiles
-        max_x = max(x_values) + 1
-        max_y = max(y_values) + 1
-        heatmap_width = max_x * 20 # Largeur de chaque tuile supposée être de 50 pixels
-        heatmap_height = max_y * 20  # Hauteur de chaque tuile supposée être de 50 pixels
+        
+        width, height = img.size
 
         fig = go.Figure(data=heatmap_data[0])
         fig.update_layout(
-            width=heatmap_width,
-            height=heatmap_height,
-            xaxis=dict(side='top')
+            autosize=False,
+            width=400,
+            height=230,
+            margin=dict(l=0, r=0, b=0, t=0),  # Ajuster les marges pour enlever les bords blancs
+            xaxis=dict(side='top'),
+            showlegend=False # Cacher la légende
         )
         return fig
     else:
         return {'data': [], 'layout': {}}
     
+@app.callback(
+    Output('boxplot', 'figure'),
+    [Input('dropdown-wsi', 'value'), 
+     Input('dropdown-annotation', 'value')]
+)
+def update_boxplot(wsi, annotation):
+    dff = df[df['wsi'] == wsi]
+    dff = dff[dff['annotation'] == annotation]
+
+    if not dff.empty:
+        annotations = dff['data'].iloc[0]['tiles']
+        
+        # Collecte des probabilités de lymphomes
+        lymphome_probabilities = [annotation['lymphome_probability'] for annotation in annotations]
+
+        # Création du boxplot
+        fig = go.Figure(go.Box(y=lymphome_probabilities, name='Probabilité de lymphome'))
+        fig.update_layout(title='Boxplot des probabilités de lymphomes')
+        return fig
+    else:
+        return {'data': [], 'layout': {}}
+
 
 @app.callback(
     Output('table-container', 'children'),
-    [Input('dropdown-wsi', 'value'), Input('dropdown-annotation', 'value'), Input('lymphome-filter', 'value')]
+    [Input('dropdown-wsi', 'value'), Input('dropdown-annotation', 'value'), Input('lymphome-slider', 'value')]
 )
-def update_table(wsi, annotation, filter_value):
+def update_table(wsi, annotation, slider_value):
     dff = df[df['wsi'] == wsi]
     dff = dff[dff['annotation'] == annotation]
     
     table_data = []
-    #RESOLUTION de la table juste ici
     dff.reset_index(drop=True, inplace=True)
     table_data = dff['data'][0]['tiles']
     
-    # Création du DataFrame pour afficher les données dans le tableau
     df_table = pandas.DataFrame(table_data)
     
-    if 'lymphome_above_0.5' in filter_value:
-        df_table = df_table.query('lymphome_probability > 0.9')
-    # Création du composant DataTable
+    df_table = df_table.query(f'lymphome_probability > {slider_value}')
+    
     table = dash_table.DataTable(
         id='table',
         columns=[{'name': col, 'id': col} for col in df_table.columns[1:]],
         data=df_table.to_dict('records'),
-        style_table={'overflowX': 'auto'},  # Permet de faire défiler horizontalement si le tableau est trop large
+        style_table={'overflowX': 'auto'},
         style_cell={
             'textAlign': 'left',
             'minWidth': '50px', 'width': '100px', 'maxWidth': '200px',
             'whiteSpace': 'normal'
         },
         page_size=10,
-            # Nombre d'éléments par page
     )
 
     return table
 
-
+@app.callback(
+    Output('slider-value-output', 'children'),
+    [Input('lymphome-slider', 'value')]
+)
+def update_slider_value_output(slider_value):
+    return f'Valeur actuelle : {slider_value}'
 @app.callback(
     Output('dropdown-annotation', 'value'),
     [Input('dropdown-wsi', 'value')]

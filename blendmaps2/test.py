@@ -7,7 +7,7 @@ import webbrowser
 from PIL import Image
 import json
 from dash.exceptions import PreventUpdate
-from generateDatas import create_proba,prob_to_rgb
+from generateDatas import create_proba,create_heatmap_png
 import plotly.graph_objects as go
 import cv2
 import dash
@@ -23,20 +23,24 @@ web_open = False
 dirName = os.path.dirname(__file__)
 #récupérer les chemins 
 
-create_proba(dirName)
+tile_size = 50
 
+create_proba(dirName,tile_size)
+create_heatmap_png(dirName,tile_size)
 
 path_name_image = dirName+"/data/**/*.png"
 path_name_data = dirName+"/data/**/*result.json"
-print(path_name_data)
-
-for file_ in glob.glob(path_name_image, recursive = True):
-    base, image_name = os.path.split(file_)
-    base, annotation = os.path.split(base)
-    base, wsi = os.path.split(base)
-    df.append({'annotation': annotation, 'wsi': wsi, 'image': image_name, 'path': file_})
 
 data = []    
+
+for file_ in glob.glob(path_name_image, recursive = True):
+    if not file_.endswith("heatmap.png"):
+        base, image_name = os.path.split(file_)
+        base, annotation = os.path.split(base)
+        base, wsi = os.path.split(base)
+        df.append({'annotation': annotation, 'wsi': wsi, 'image': image_name, 'path': file_})
+    
+
 for file_ in glob.glob(path_name_data, recursive=True):
     try:
         with open(file_, "r") as json_file:
@@ -46,10 +50,11 @@ for file_ in glob.glob(path_name_data, recursive=True):
         print("Error decoding JSON:", e)
 
 
+
 df = pandas.DataFrame(df)
 #ajout de la colonne data
 df['data'] =  data
-print(df)
+
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = "Analyse cliniques"
@@ -186,19 +191,18 @@ def update_image(wsi, annotation):
     img = np.array(Image.open(dff['path'].iloc[0]).reduce(4))
     img_sequence.append(img)
     names.append(dff['image'].iloc[0])
-    img_bis = np.array(Image.open(dff['path'].iloc[0]).reduce(4))
-
-    prob_matrix = np.random.rand(img_bis.shape[0], img_bis.shape[1])  # Matrice de probabilités aléatoires de taille 20x20
-    rgb_matrix= prob_to_rgb(prob_matrix)
-    rgb_matrix = rgb_matrix.astype(np.uint8)
-
-    print("Shape of rgb_matrix:", rgb_matrix.shape)
-    print("Data type of rgb_matrix:", rgb_matrix.dtype)
-
+    
+    
+    heatmap_path = f'{dirName}/data/{wsi}/{annotation}/{annotation}_heatmap.png'
+    heatmap = np.array(Image.open(heatmap_path).reduce(4))
+    heatmap_without_alpha = heatmap[:, :, :3]
+    # print(heatmap.shape)
+    # print(heatmap)
+    # print(img.shape)
     # Appliquer l'overlay de la matrice de probabilités redimensionnée sur l'image
-    overlay = cv2.applyColorMap(rgb_matrix, cv2.COLORMAP_JET)
+    
     alpha = 0.5  # Facteur d'opacité
-    output = cv2.addWeighted(overlay, alpha, img, 1-alpha, 0)
+    output = cv2.addWeighted(heatmap_without_alpha, alpha, img, 1-alpha, 0)
     img_sequence.append(output)
    
     names.append(dff['image'].iloc[0]+' bis')
@@ -224,7 +228,7 @@ def update_image(wsi, annotation):
 def update_heatmap(wsi, annotation):
     dff = df[df['wsi'] == wsi]
     dff = dff[dff['annotation'] == annotation]
-
+    img = Image.open(dff['path'].iloc[0]).reduce(4)
     # # Imprimez le DataFrame filtré juste avant d'accéder aux données de la heatmap
     # print("DataFrame filtré (dff) avant de créer la heatmap:")
     # print(dff)
@@ -260,17 +264,14 @@ def update_heatmap(wsi, annotation):
             'colorscale': 'bluered',
             'colorbar': {'title': 'Probability'},
         }]
-
-        # Déterminer la taille de la heatmap en fonction du nombre de tuiles
-        max_x = max(x_values) + 1
-        max_y = max(y_values) + 1
-        heatmap_width = max_x * 20 # Largeur de chaque tuile supposée être de 50 pixels
-        heatmap_height = max_y * 20  # Hauteur de chaque tuile supposée être de 50 pixels
+        
+        width, height = img.size
 
         fig = go.Figure(data=heatmap_data[0])
         fig.update_layout(
-            width=heatmap_width,
-            height=heatmap_height,
+            autosize = False,
+            width=width,
+            height=height,
             xaxis=dict(side='top')
         )
         return fig
