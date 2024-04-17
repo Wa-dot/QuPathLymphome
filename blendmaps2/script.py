@@ -27,7 +27,7 @@ tile_size = 50
 
 
 create_proba(dirName,tile_size)
-create_heatmap_png(dirName,tile_size)
+create_heatmap_png(dirName)
 
 path_name_image = dirName+"/data/**/*.png"
 path_name_data = dirName+"/data/**/*result.json"
@@ -224,19 +224,14 @@ def update_image(wsi, annotation):
     heatmap_path = f'{dirName}/data/{wsi}/{annotation}/{annotation}_heatmap.png'
     heatmap = np.array(Image.open(heatmap_path).reduce(4))
     heatmap_without_alpha = heatmap[:, :, :3]
-    print(heatmap_without_alpha.shape)
-    
-    print(img.shape)
-    # Appliquer l'overlay de la matrice de probabilités redimensionnée sur l'image
     
     alpha = 0.5  # Facteur d'opacité
     output = cv2.addWeighted(heatmap_without_alpha, alpha, img, 1-alpha, 0)
     img_sequence.append(output)
    
-    names.append(dff['image'].iloc[0]+' bis')
+    names.append("Heatmap")
     img_sequence = np.stack(img_sequence, axis=0)
-        #PROBLEME IL NOUS FAUT LES DIMENSIONS DE LA VRAIE IMAGE POUR FAIRE LE RAPPORT AVEC LA PNG AFIN DE SAVOIR OU POSITIONNER QUELLE TILE SUR LA PNG CAR LES ECHELLE NES SONT PAS LES MEMES
-    h_png, w_png = img_sequence.shape[1:3]
+    
     fig = px.imshow(img_sequence, facet_col=0, binary_string=True)
     fig.update_layout(showlegend=False)
     fig.update_xaxes(visible=False)
@@ -256,7 +251,7 @@ def update_image(wsi, annotation):
 def update_heatmap(wsi, annotation):
     dff = df[df['wsi'] == wsi]
     dff = dff[dff['annotation'] == annotation]
-    img = Image.open(dff['path'].iloc[0]).reduce(5)
+    # img = Image.open(dff['path'].iloc[0]).reduce(5)
    
 
     if not dff.empty:
@@ -290,8 +285,6 @@ def update_heatmap(wsi, annotation):
             'colorscale': 'rdbu',
             'colorbar': {'title': 'Probability'},
         }]
-        
-        width, height = img.size
 
         fig = go.Figure(data=heatmap_data[0])
         fig.update_layout(

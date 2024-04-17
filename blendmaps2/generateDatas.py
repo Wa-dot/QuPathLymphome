@@ -11,9 +11,6 @@ def generate_tile_probabilities(annotation, tile_size,num_tiles_width,num_tiles_
     annotation_id = annotation["id"]
     geometry = annotation["geometry"]
     xmin, ymin = geometry["coordinates"][0][0]  # Coin supérieur gauche de l'annotation
-    xmax, ymax = geometry["coordinates"][0][2]  # Coin inférieur droit de l'annotation
-    width = xmax - xmin
-    height = ymax - ymin
     tile_width = tile_size
     tile_height = tile_size
     
@@ -46,7 +43,6 @@ def generate_tile_probabilities(annotation, tile_size,num_tiles_width,num_tiles_
 def calculate_num_tiles(image_path, tile_size):
     with Image.open(image_path) as img:
         width, height = img.size
-        print("width :"+str(width) +"\n height: "+str(height))
         num_tiles_width = (width//4)//tile_size
         num_tiles_height = (height//4)//tile_size
     return num_tiles_width , num_tiles_height
@@ -55,9 +51,11 @@ def calculate_num_tiles(image_path, tile_size):
 
 def create_proba(dirName, tile_size):
     wsi_folders_name = os.listdir(dirName+"/data")
-
+    #on check pour tous les dossiers dans data
     for wsi_folder in wsi_folders_name:
         annotation_folders_name = os.listdir(f'{dirName}/data/{wsi_folder}')
+
+        #for each annotation folder we'll create result.json if there is no thanks to the annotation.png (not heatmap.png)  
         for annotation_folder in annotation_folders_name:
             existing_annotation_files = [
             filename for filename in os.listdir(f'{dirName}/data/{wsi_folder}/{annotation_folder}') if filename.endswith('result.json')
@@ -90,21 +88,19 @@ def create_proba(dirName, tile_size):
                         with open(output_file, 'w') as f:
                             json.dump(lymphome_probabilities, f)
 
-                        print(f'Probabilités aléatoires de présence de lymphomes pour {filename} (annotation) générées et enregistrées dans:', output_file)
+                        print(f'File {filename} created within', output_file)
             else:
-                print(f"Des fichiers d'annotation existent déjà dans le dossier {annotation_folder}. Aucune nouvelle génération de fichiers n'est nécessaire.")
+                print(f"File already existing within {annotation_folder}.")
 
 
 
-def create_heatmap_png(dirName, tile_size):
+def create_heatmap_png(dirName):
     wsi_folders_name = os.listdir(dirName + "/data")
 
     for wsi_folder in wsi_folders_name:
         annotation_folders_name = os.listdir(f'{dirName}/data/{wsi_folder}')
         for annotation_folder in annotation_folders_name:
-            existing_heatmap_files_result = [
-                filename for filename in os.listdir(f'{dirName}/data/{wsi_folder}/{annotation_folder}') if filename.endswith('result.json')
-            ]
+            
             existing_heatmap_files_heatmap = [
                 filename for filename in os.listdir(f'{dirName}/data/{wsi_folder}/{annotation_folder}') if filename.endswith('heatmap.png')
             ]
@@ -112,19 +108,20 @@ def create_heatmap_png(dirName, tile_size):
             if not existing_heatmap_files_heatmap:
                 df = None  # Initialisation de df à l'extérieur des conditions
                 for filename in os.listdir(dirName+"/data/"+wsi_folder+"/"+annotation_folder):
+
                     if filename.endswith('.png'):
                         annotation_image_path = f'{dirName}/data/{wsi_folder}/{annotation_folder}/{filename}'
                         with Image.open(annotation_image_path) as img:
                             annotation_width, annotation_height = img.size
-            if not existing_heatmap_files_heatmap:
-                for filename in os.listdir(dirName+"/data/"+wsi_folder+"/"+annotation_folder):
+            
                     if filename.endswith('result.json'):
                         # Lire les annotations à partir du fichier JSON
                         with open(f'{dirName}/data/{wsi_folder}/{annotation_folder}/{filename}', 'r') as f:
                             annotation_result = json.load(f)
+
                         # Convertir le JSON en DataFrame
                         df = pd.json_normalize(annotation_result['tiles'])
-                        print(df)
+                        
                         
                         if df is not None and not df.empty:  # Vérification supplémentaire de df
                             # Créer un dictionnaire pour stocker les probabilités pour chaque tile_id
@@ -165,10 +162,7 @@ def create_heatmap_png(dirName, tile_size):
                                 showlegend=False, # Cacher la légende
                                 margin_autoexpand=False
                             )
-
-                            print(f'{dirName}/data/{wsi_folder}/{annotation_folder}/{annotation_folder}_heatmap.png')
                             # Enregistrer l'image au format PNG
-                            
                             try:
                                 pio.write_image(fig, f'{dirName}/data/{wsi_folder}/{annotation_folder}/{annotation_folder}_heatmap.png')
                                 print("Image créée avec succès")
