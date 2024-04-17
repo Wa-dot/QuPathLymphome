@@ -201,7 +201,7 @@ def displayHeatMapOnQupath(imageFolder) {
 }
 
 try {
-  String pythonExecutable = chooseFile('Select the python executable')
+  String pythonExecutable = buildFilePath(pathOutput,"nomEnvironment//Scripts//python.exe")
   print pythonExecutable
   if (pythonExecutable == null) {
     return null

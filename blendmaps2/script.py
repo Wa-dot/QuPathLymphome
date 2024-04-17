@@ -377,4 +377,4 @@ def update_default_annotation(wsi):
 
 if __name__ == '__main__':
     webbrowser.open_new('http://127.0.0.1:8888/')
-    app.run_server(debug=True, port=8888, use_reloader=False)
+    app.run_server(debug=False, port=8888, use_reloader=False)
