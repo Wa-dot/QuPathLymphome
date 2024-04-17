@@ -101,30 +101,39 @@ else:
                             dbc.CardBody([
                                 html.H4("Annotation et Heatmap", className="card-title"),
                                 dcc.Graph(id='images'),
+                                html.Div([
+                                    html.H4("Régler l'opacité"),
+                                    dcc.Slider(id='opacity-slider',
+                                           min=0,
+                                           max=1,
+                                           step=0.01,
+                                           marks={i/5: str(i/5) for i in range(11)},
+                                           value=0.5)
+                                    ],style={'width':'40%'})
                                 ])
                         ],className="rounded-3")
                     ], width= 12)
                 ],className="rounded-3"),
                 dbc.Row([
-    dbc.Col([
-        dbc.Card([
-            dbc.CardBody([
-                html.H4("Heatmap 2", className="card-title"),
-                html.Div([
-                   dcc.Graph(id='heatmap')
-                ],style={'display':'flex','align-items': 'center', 'justify-content': 'center','height':'100%'})
-            ]),
-        ], className="h-100"),  # Utilisation de la classe 'h-100' pour spécifier une hauteur de 100%
-    ], width=6),
-    dbc.Col([
-        dbc.Card([
-            dbc.CardBody([
-                html.H4("Boxplot des probabilités de lymphomes", className="card-title"),
-                dcc.Graph(id="boxplot")
-            ]),
-        ], className="h-100"),  # Utilisation de la classe 'h-100' pour spécifier une hauteur de 100%
-    ], width=6)
-], className="align-items-stretch"),
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardBody([
+                                html.H4("Heatmap 2", className="card-title"),
+                                html.Div([
+                                   dcc.Graph(id='heatmap')
+                                ],style={'display':'flex','align-items': 'center', 'justify-content': 'center','height':'100%'})
+                            ]),
+                        ], className="h-100"),  # Utilisation de la classe 'h-100' pour spécifier une hauteur de 100%
+                    ], width=6),
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardBody([
+                                html.H4("Boxplot des probabilités de lymphomes", className="card-title"),
+                                dcc.Graph(id="boxplot")
+                            ]),
+                        ], className="h-100"),  # Utilisation de la classe 'h-100' pour spécifier une hauteur de 100%
+                    ], width=6)
+                ], className="align-items-stretch"),
                     dbc.Card([
                         dbc.CardBody([
                             html.Div([
@@ -209,9 +218,9 @@ def update_dropdown(input_value):
 #Dropdown Image part
 @app.callback(
     Output('images', 'figure'),
-    [Input('dropdown-wsi', 'value'), Input('dropdown-annotation', 'value')]
+    [Input('dropdown-wsi', 'value'), Input('dropdown-annotation', 'value'),Input('opacity-slider','value')]
 )
-def update_image(wsi, annotation):
+def update_image(wsi, annotation,alpha):
     dff = df[df['wsi'] == wsi]
     dff = dff[dff['annotation'] == annotation]
     img_sequence = []
@@ -225,7 +234,7 @@ def update_image(wsi, annotation):
     heatmap = np.array(Image.open(heatmap_path).reduce(4))
     heatmap_without_alpha = heatmap[:, :, :3]
     
-    alpha = 0.5  # Facteur d'opacité
+    alpha = alpha  # Facteur d'opacité
     output = cv2.addWeighted(heatmap_without_alpha, alpha, img, 1-alpha, 0)
     img_sequence.append(output)
    
@@ -246,7 +255,8 @@ def update_image(wsi, annotation):
 @app.callback(
     Output('heatmap', 'figure'),
     [Input('dropdown-wsi', 'value'), 
-     Input('dropdown-annotation', 'value')]
+     Input('dropdown-annotation', 'value'),
+     ]
 )
 def update_heatmap(wsi, annotation):
     dff = df[df['wsi'] == wsi]
@@ -370,4 +380,4 @@ def update_default_annotation(wsi):
 
 if __name__ == '__main__':
     webbrowser.open_new('http://127.0.0.1:8888/')
-    app.run_server(debug=False, port=8888, use_reloader=False)
+    app.run_server(debug=True, port=8888, use_reloader=False)
