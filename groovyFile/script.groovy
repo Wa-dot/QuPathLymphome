@@ -164,7 +164,7 @@ def displayHeatMapOnQupath(imageFolder) {
             // Extraire x, y, largeur et hauteur
             double x = tileObject.get('xmin').getAsDouble()
             double y = tileObject.get('ymin').getAsDouble()
-            double probability = tileObject.get('lymphoma_probability').getAsDouble()
+            double probability = tileObject.get('lymphome_probability').getAsDouble()
             double width = Math.abs(tileObject.get('xmax').getAsDouble() - x)
             double height = Math.abs(tileObject.get('ymax').getAsDouble() - y)
  
