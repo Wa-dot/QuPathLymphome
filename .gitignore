@@ -26,5 +26,5 @@ replay_pid*
 #Except conda environment and datas
 __pycache__/
 lymphome_containers/
-blendmaps2/data/
+data/
 pythonEnv/
