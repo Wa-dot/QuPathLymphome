@@ -16,6 +16,12 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 
+
+PYTHON_ENV_NAME = 'pythonEnv'
+SCRIPT_NAME = 'launchApp.py'
+
+
+
 // Optional output path (can be removed)
 def pathOutput = chooseDirectory('Choose the QupathLymphoma folder')
 
@@ -201,17 +207,18 @@ def displayHeatMapOnQupath(imageFolder) {
 }
 
 try {
-  String pythonExecutable = buildFilePath(pathOutput,"nomEnvironment//Scripts//python.exe")
+  String pythonExecutable = buildFilePath(pathOutput, PYTHON_ENV_NAME,"Scripts//python.exe")
   print pythonExecutable
   if (pythonExecutable == null) {
+    print 'Python path error'
     return null
   }
   String outputFolder = pathOutput + '\\blendmaps2'
   if (outputFolder == null) {
+    print 'Output folder error'
     return null
   }
-  //pythonScript = new File(new File(outputFolder), "script.py").absolutePath
-  var pythonScript = buildFilePath(outputFolder, 'script.py')
+  var pythonScript = buildFilePath(outputFolder, SCRIPT_NAME)
 
   //var name = QP.getCurrentImageName()
   var path = QP.getCurrentImageData().getServer().getURIs()[0].getPath().substring(1)

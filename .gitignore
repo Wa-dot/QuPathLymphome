@@ -23,6 +23,8 @@
 hs_err_pid*
 replay_pid*
 
-#Except conda environment
+#Except conda environment and datas
+__pycache__/
 lymphome_containers/
-WSI/
+blendmaps2/data/
+pythonEnv/

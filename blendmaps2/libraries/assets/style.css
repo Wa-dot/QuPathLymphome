@@ -1,0 +1,61 @@
+/* Main application container */
+#app-container {
+    background-color: rgb(240, 240, 240); /* Background color */
+    min-height: 100vh;
+    margin-top: 0;
+    padding: 30px;
+    box-sizing: border-box;
+    /* Inner spacing */
+}
+
+/* Selection part styling */
+#selection-part {
+    width: 70%;
+    margin: auto;
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+}
+
+/* Main container styling */
+#main-container {
+    width: 80%;
+    margin: auto;
+}
+
+/* Title styling */
+h1 {
+    color: black; /* Text color */
+    font-size: 3rem; /* Font size */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+}
+
+h4 {
+    color: black; /* Text color */
+    font-size: 1rem; /* Font size */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Button styling */
+#exit-button {
+    background-color: red; /* Background color */
+    color: white; /* Text color */
+    border: none; /* Remove border */
+    padding: 10px 20px; /* Inner spacing */
+    cursor: pointer; /* Mouse cursor */
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 40px;
+}
+
+/* Dropdown menu styling */
+.dropdown {
+    width: 200px; /* Width of dropdown menu */
+}
+
+/* Heatmap styling */
+#heatmap {
+    border: 2px solid black; /* Border around heatmap */
+}
